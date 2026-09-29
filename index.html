@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>GymPulse — Foco Peitoral</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: '#10b981',
+            brandDark: '#059669',
+            darkBg: '#0f172a',
+            darkCard: '#1e293b',
+            darkBorder: '#334155'
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { -webkit-tap-highlight-color: transparent; }
+    input[type=number]::-webkit-inner-spin-button,
+    input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+  </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen pb-32 font-sans select-none">
+
+  <!-- Cabeçalho -->
+  <header class="sticky top-0 z-30 bg-slate-900/90 backdrop-blur-md border-b border-slate-800 px-4 py-3 flex items-center justify-between">
+    <div class="flex items-center gap-2">
+      <div class="w-9 h-9 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-black text-lg border border-emerald-500/30">
+        <i class="fa-solid fa-dumbbell"></i>
+      </div>
+      <div>
+        <h1 class="text-base font-bold leading-tight">GymPulse</h1>
+        <p class="text-xs text-emerald-400 font-medium">Foco em Peitoral & Hipertrofia</p>
+      </div>
+    </div>
+    <button onclick="resetCurrentWorkout()" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded-lg border border-slate-700 transition">
+      <i class="fa-solid fa-rotate-left mr-1"></i> Reiniciar
+    </button>
+  </header>
+
+  <!-- Seletor de Fichas / Abas -->
+  <nav class="flex gap-2 p-3 overflow-x-auto no-scrollbar border-b border-slate-800 bg-slate-950/40">
+    <button onclick="switchTab('treino_A')" id="tab-treino_A" class="tab-btn px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap bg-emerald-500 text-slate-950 shadow-lg shadow-emerald-500/20">
+      Seg · Treino A
+    </button>
+    <button onclick="switchTab('treino_B')" id="tab-treino_B" class="tab-btn px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap bg-slate-800 text-slate-400">
+      Ter · Treino B
+    </button>
+    <button onclick="switchTab('descanso')" id="tab-descanso" class="tab-btn px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap bg-slate-800 text-slate-400">
+      Qua · Descanso
+    </button>
+    <button onclick="switchTab('treino_C')" id="tab-treino_C" class="tab-btn px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap bg-slate-800 text-slate-400">
+      Qui · Treino C
+    </button>
+    <button onclick="switchTab('treino_D')" id="tab-treino_D" class="tab-btn px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap bg-slate-800 text-slate-400">
+      Sex · Treino D
+    </button>
+    <button onclick="switchTab('progresso')" id="tab-progresso" class="tab-btn px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap bg-slate-800 text-slate-400">
+      <i class="fa-solid fa-chart-line mr-1"></i> Progresso
+    </button>
+  </nav>
+
+  <!-- Conteúdo Principal -->
+  <main class="p-4 max-w-xl mx-auto space-y-4">
+    <!-- Info do Treino Atual -->
+    <div id="workout-header" class="flex items-center justify-between bg-slate-800/60 p-3.5 rounded-2xl border border-slate-800">
+      <div>
+        <h2 id="workout-title" class="font-bold text-white text-base">A – Peito + Tríceps</h2>
+        <p id="workout-sub" class="text-xs text-slate-400 mt-0.5">Segunda-feira · 6 Exercícios</p>
+      </div>
+      <div class="text-right">
+        <span id="workout-progress-text" class="text-xs font-bold text-emerald-400">0%</span>
+        <div class="w-16 h-1.5 bg-slate-700 rounded-full mt-1 overflow-hidden">
+          <div id="workout-progress-bar" class="h-full bg-emerald-500 rounded-full transition-all duration-300" style="width: 0%"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Lista de Exercícios -->
+    <div id="exercise-list" class="space-y-3"></div>
+
+    <!-- Ecrã de Descanso -->
+    <div id="rest-view" class="hidden text-center py-12 px-6 bg-slate-800/40 rounded-2xl border border-slate-800/80">
+      <div class="w-16 h-16 mx-auto rounded-full bg-emerald-500/10 text-emerald-400 flex items-center justify-center text-2xl mb-4 border border-emerald-500/20">
+        <i class="fa-solid fa-bed"></i>
+      </div>
+      <h3 class="text-lg font-bold text-white">Quarta-feira · Descanso Ativo</h3>
+      <p class="text-xs text-slate-400 mt-2 max-w-xs mx-auto leading-relaxed">
+        Dia reservado para a regeneração muscular e hipertrofia. Mantenha a hidratação e a ingestão proteica adequadas.
+      </p>
+    </div>
+
+    <!-- Secção de Progresso -->
+    <div id="progress-view" class="hidden space-y-3">
+      <div class="bg-slate-800/60 p-3.5 rounded-2xl border border-slate-800">
+        <h3 class="text-sm font-bold text-white mb-1">Acompanhamento Semanal</h3>
+        <p class="text-xs text-slate-400">Registe o peso corporal e a evolução das cargas principais.</p>
+      </div>
+      <div id="progress-table" class="space-y-2.5"></div>
+    </div>
+  </main>
+
+  <!-- Temporizador de Descanso Fixo -->
+  <div class="fixed bottom-0 inset-x-0 bg-slate-950/95 backdrop-blur-lg border-t border-slate-800/80 p-3 z-40">
+    <div class="max-w-xl mx-auto flex items-center justify-between gap-3">
+      <div class="flex items-center gap-2">
+        <button onclick="toggleTimer()" id="timer-toggle-btn" class="w-10 h-10 rounded-xl bg-emerald-500 text-slate-950 font-bold flex items-center justify-center text-sm shadow-md active:scale-95 transition">
+          <i id="timer-icon" class="fa-solid fa-play"></i>
+        </button>
+        <div>
+          <div class="text-[10px] uppercase font-bold tracking-wider text-slate-400">Descanso</div>
+          <div id="timer-display" class="text-xl font-black font-mono text-emerald-400 leading-none">01:00</div>
+        </div>
+      </div>
+      
+      <div class="flex items-center gap-1.5">
+        <button onclick="setTimerSeconds(45)" class="px-2.5 py-1.5 rounded-lg bg-slate-800 border border-slate-700 text-xs font-semibold hover:border-emerald-500 active:scale-95 transition">45s</button>
+        <button onclick="setTimerSeconds(60)" class="px-2.5 py-1.5 rounded-lg bg-slate-800 border border-slate-700 text-xs font-semibold hover:border-emerald-500 active:scale-95 transition">60s</button>
+        <button onclick="setTimerSeconds(90)" class="px-2.5 py-1.5 rounded-lg bg-slate-800 border border-slate-700 text-xs font-semibold hover:border-emerald-500 active:scale-95 transition">90s</button>
+        <button onclick="setTimerSeconds(120)" class="px-2.5 py-1.5 rounded-lg bg-slate-800 border border-slate-700 text-xs font-semibold hover:border-emerald-500 active:scale-95 transition">2m</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const WORKOUT_DATA = {
+      treino_A: {
+        dia: "Segunda-feira",
+        titulo: "A – Peito + Tríceps",
+        exercicios: [
+          { id: "a1", nome: "Supino inclinado com halteres", series: 4, reps: "8–12" },
+          { id: "a2", nome: "Supino reto", series: 3, reps: "8–12" },
+          { id: "a3", nome: "Crucifixo / Crossover", series: 3, reps: "12–15" },
+          { id: "a4", nome: "Paralelas ou flexão", series: 3, reps: "Próximo da falha" },
+          { id: "a5", nome: "Tríceps na corda", series: 3, reps: "10–15" },
+          { id: "a6", nome: "Tríceps francês", series: 3, reps: "10–12" }
+        ]
+      },
+      treino_B: {
+        dia: "Terça-feira",
+        titulo: "B – Costas + Bíceps",
+        exercicios: [
+          { id: "b1", nome: "Puxada alta", series: 4, reps: "8–12" },
+          { id: "b2", nome: "Remada baixa", series: 4, reps: "8–12" },
+          { id: "b3", nome: "Remada unilateral", series: 3, reps: "10–12" },
+          { id: "b4", nome: "Rosca direta", series: 3, reps: "8–12" },
+          { id: "b5", nome: "Rosca martelo", series: 3, reps: "10–12" }
+        ]
+      },
+      treino_C: {
+        dia: "Quinta-feira",
+        titulo: "C – Perna + Ombro",
+        exercicios: [
+          { id: "c1", nome: "Agachamento", series: 4, reps: "8–12" },
+          { id: "c2", nome: "Leg press", series: 3, reps: "10–12" },
+          { id: "c3", nome: "Cadeira extensora", series: 3, reps: "12–15" },
+          { id: "c4", nome: "Mesa flexora", series: 3, reps: "10–15" },
+          { id: "c5", nome: "Desenvolvimento de ombros", series: 4, reps: "8–12" },
+          { id: "c6", nome: "Elevação lateral", series: 4, reps: "12–15" }
+        ]
+      },
+      treino_D: {
+        dia: "Sexta-feira",
+        titulo: "D – Peito + Costas",
+        exercicios: [
+          { id: "d1", nome: "Supino inclinado", series: 4, reps: "8–12" },
+          { id: "d2", nome: "Crossover de baixo para cima", series: 3, reps: "12–15" },
+          { id: "d3", nome: "Supino reto com halteres", series: 3, reps: "8–12" },
+          { id: "d4", nome: "Puxada alta", series: 3, reps: "8–12" },
+          { id: "d5", nome: "Remada", series: 3, reps: "8–12" }
+        ]
+      }
+    };
+
+    let currentTab = 'treino_A';
+    let userState = JSON.parse(localStorage.getItem('gympulse_data') || '{}');
+    if (!userState.workouts) userState.workouts = {};
+    if (!userState.progress) userState.progress = {};
+
+    function saveData() {
+      localStorage.setItem('gympulse_data', JSON.stringify(userState));
+    }
+
+    function switchTab(tabId) {
+      currentTab = tabId;
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('bg-emerald-500', 'text-slate-950', 'shadow-lg', 'shadow-emerald-500/20');
+        btn.classList.add('bg-slate-800', 'text-slate-400');
+      });
+
+      const activeBtn = document.getElementById(`tab-${tabId}`);
+      if (activeBtn) {
+        activeBtn.classList.add('bg-emerald-500', 'text-slate-950', 'shadow-lg', 'shadow-emerald-500/20');
+        activeBtn.classList.remove('bg-slate-800', 'text-slate-400');
+      }
+
+      const exerciseList = document.getElementById('exercise-list');
+      const workoutHeader = document.getElementById('workout-header');
+      const restView = document.getElementById('rest-view');
+      const progressView = document.getElementById('progress-view');
+
+      if (tabId === 'descanso') {
+        workoutHeader.classList.add('hidden');
+        exerciseList.classList.add('hidden');
+        progressView.classList.add('hidden');
+        restView.classList.remove('hidden');
+      } else if (tabId === 'progresso') {
+        workoutHeader.classList.add('hidden');
+        exerciseList.classList.add('hidden');
+        restView.classList.add('hidden');
+        progressView.classList.remove('hidden');
+        renderProgress();
+      } else {
+        workoutHeader.classList.remove('hidden');
+        exerciseList.classList.remove('hidden');
+        restView.classList.add('hidden');
+        progressView.classList.add('hidden');
+        renderWorkout(tabId);
+      }
+    }
+
+    function renderWorkout(key) {
+      const data = WORKOUT_DATA[key];
+      document.getElementById('workout-title').innerText = data.titulo;
+      document.getElementById('workout-sub').innerText = `${data.dia} · ${data.exercicios.length} Exercícios`;
+
+      const container = document.getElementById('exercise-list');
+      container.innerHTML = '';
+
+      let totalSets = 0;
+      let completedSets = 0;
+
+      data.exercicios.forEach(ex => {
+        totalSets += ex.series;
+        const exState = userState.workouts[ex.id] || { sets: {}, weight: '' };
+
+        const card = document.createElement('div');
+        card.className = "bg-slate-800/80 border border-slate-800 rounded-2xl p-4 space-y-3";
+
+        let setsCheckboxes = '';
+        for (let s = 1; s <= ex.series; s++) {
+          const isDone = !!exState.sets[s];
+          if (isDone) completedSets++;
+          setsCheckboxes += `
+            <button onclick="toggleSet('${ex.id}', ${s})" 
+              class="w-8 h-8 rounded-lg text-xs font-bold transition flex items-center justify-center ${isDone ? 'bg-emerald-500 text-slate-950 font-black' : 'bg-slate-700/60 text-slate-300 border border-slate-600/50'}">
+              ${s}
+            </button>
+          `;
+        }
+
+        card.innerHTML = `
+          <div class="flex items-start justify-between gap-2">
+            <div>
+              <h4 class="font-semibold text-white text-sm leading-tight">${ex.nome}</h4>
+              <p class="text-xs text-slate-400 mt-0.5">${ex.series} séries × ${ex.reps}</p>
+            </div>
+            <div class="flex items-center gap-1.5 bg-slate-900/60 px-2.5 py-1 rounded-lg border border-slate-700/60">
+              <span class="text-[11px] text-slate-400 font-medium">kg</span>
+              <input type="number" step="0.5" placeholder="0" 
+                value="${exState.weight || ''}" 
+                oninput="updateWeight('${ex.id}', this.value)"
+                class="w-12 bg-transparent text-emerald-400 font-bold text-xs text-right outline-none">
+            </div>
+          </div>
+          <div class="pt-1 flex items-center justify-between border-t border-slate-700/40">
+            <span class="text-[11px] text-slate-400 font-medium">Séries concluídas:</span>
+            <div class="flex gap-1.5">
+              ${setsCheckboxes}
+            </div>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+
+      const pct = totalSets > 0 ? Math.round((completedSets / totalSets) * 100) : 0;
+      document.getElementById('workout-progress-text').innerText = `${pct}%`;
+      document.getElementById('workout-progress-bar').style.width = `${pct}%`;
+    }
+
+    function toggleSet(exId, setNum) {
+      if (!userState.workouts[exId]) userState.workouts[exId] = { sets: {}, weight: '' };
+      userState.workouts[exId].sets[setNum] = !userState.workouts[exId].sets[setNum];
+      saveData();
+      renderWorkout(currentTab);
+    }
+
+    function updateWeight(exId, val) {
+      if (!userState.workouts[exId]) userState.workouts[exId] = { sets: {}, weight: '' };
+      userState.workouts[exId].weight = val;
+      saveData();
+    }
+
+    function resetCurrentWorkout() {
+      if (!confirm("Pretende reiniciar as marcações de séries deste treino?")) return;
+      const data = WORKOUT_DATA[currentTab];
+      if (data) {
+        data.exercicios.forEach(ex => {
+          if (userState.workouts[ex.id]) {
+            userState.workouts[ex.id].sets = {};
+          }
+        });
+        saveData();
+        renderWorkout(currentTab);
+      }
+    }
+
+    function renderProgress() {
+      const container = document.getElementById('progress-table');
+      container.innerHTML = '';
+
+      for (let w = 1; w <= 12; w++) {
+        const item = userState.progress[w] || { peso: '', supinoInc: '', supinoReto: '', obs: '' };
+        const el = document.createElement('div');
+        el.className = "bg-slate-800/80 border border-slate-800 rounded-xl p-3 space-y-2";
+        el.innerHTML = `
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-emerald-400 uppercase tracking-wide">Semana ${w}</span>
+            <input type="text" placeholder="Observações..." value="${item.obs || ''}"
+              oninput="updateProgressField(${w}, 'obs', this.value)"
+              class="bg-transparent text-right text-xs text-slate-300 placeholder-slate-600 outline-none w-1/2">
+          </div>
+          <div class="grid grid-cols-3 gap-2 text-center text-xs">
+            <div class="bg-slate-900/60 p-2 rounded-lg border border-slate-800">
+              <span class="block text-[10px] text-slate-400">Peso (kg)</span>
+              <input type="number" step="0.1" placeholder="--" value="${item.peso || ''}"
+                oninput="updateProgressField(${w}, 'peso', this.value)"
+                class="w-full bg-transparent text-center font-bold text-white outline-none mt-0.5">
+            </div>
+            <div class="bg-slate-900/60 p-2 rounded-lg border border-slate-800">
+              <span class="block text-[10px] text-slate-400">Sup. Inclinado</span>
+              <input type="number" step="0.5" placeholder="--" value="${item.supinoInc || ''}"
+                oninput="updateProgressField(${w}, 'supinoInc', this.value)"
+                class="w-full bg-transparent text-center font-bold text-emerald-400 outline-none mt-0.5">
+            </div>
+            <div class="bg-slate-900/60 p-2 rounded-lg border border-slate-800">
+              <span class="block text-[10px] text-slate-400">Sup. Reto</span>
+              <input type="number" step="0.5" placeholder="--" value="${item.supinoReto || ''}"
+                oninput="updateProgressField(${w}, 'supinoReto', this.value)"
+                class="w-full bg-transparent text-center font-bold text-emerald-400 outline-none mt-0.5">
+            </div>
+          </div>
+        `;
+        container.appendChild(el);
+      }
+    }
+
+    function updateProgressField(week, field, val) {
+      if (!userState.progress[week]) userState.progress[week] = {};
+      userState.progress[week][field] = val;
+      saveData();
+    }
+
+    let timerDuration = 60;
+    let timerRemaining = 60;
+    let timerInterval = null;
+
+    function formatTime(sec) {
+      const m = Math.floor(sec / 60).toString().padStart(2, '0');
+      const s = (sec % 60).toString().padStart(2, '0');
+      return `${m}:${s}`;
+    }
+
+    function updateTimerDisplay() {
+      document.getElementById('timer-display').innerText = formatTime(timerRemaining);
+    }
+
+    function setTimerSeconds(sec) {
+      clearInterval(timerInterval);
+      timerInterval = null;
+      document.getElementById('timer-icon').className = 'fa-solid fa-play';
+      timerDuration = sec;
+      timerRemaining = sec;
+      updateTimerDisplay();
+    }
+
+    function toggleTimer() {
+      const icon = document.getElementById('timer-icon');
+      if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+        icon.className = 'fa-solid fa-play';
+      } else {
+        if (timerRemaining <= 0) timerRemaining = timerDuration;
+        icon.className = 'fa-solid fa-pause';
+        timerInterval = setInterval(() => {
+          timerRemaining--;
+          updateTimerDisplay();
+          if (timerRemaining <= 0) {
+            clearInterval(timerInterval);
+            timerInterval = null;
+            icon.className = 'fa-solid fa-play';
+            playBeep();
+          }
+        }, 1000);
+      }
+    }
+
+    function playBeep() {
+      try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.frequency.value = 880;
+        gain.gain.setValueAtTime(0.2, ctx.currentTime);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.35);
+      } catch(e) {}
+    }
+
+    switchTab('treino_A');
+  </script>
+</body>
+</html>
